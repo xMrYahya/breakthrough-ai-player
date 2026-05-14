@@ -1,3 +1,5 @@
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
@@ -101,6 +103,9 @@ class MinimaxAlphaBeta {
             return null;
         }
 
+        // Order moves to improve alpha-beta pruning efficiency
+        legalMoves = orderMovesForSearch(board, legalMoves, sideToPlay);
+
         int bestScore = Integer.MIN_VALUE;
         Move bestMove = legalMoves.get(0);
 
@@ -130,6 +135,9 @@ class MinimaxAlphaBeta {
         if (legalMoves.isEmpty()) {
             return evaluationFunction.evaluate(board, maximizingSide);
         }
+
+        // Order moves to improve alpha-beta pruning efficiency
+        legalMoves = orderMovesForSearch(board, legalMoves, sideToPlay);
 
         if (sideToPlay == maximizingSide) {
             int value = Integer.MIN_VALUE;
@@ -164,6 +172,86 @@ class MinimaxAlphaBeta {
         }
     }
 
+    /**
+     * Order moves for evaluation by scoring them heuristically.
+     * Prioritizes: winning moves > captures > forward advancement.
+     * Higher-scored moves are evaluated first, improving alpha-beta pruning.
+     */
+    private List<Move> orderMovesForSearch(Board board, List<Move> moves, PlayerColor player) {
+        // Create a list of (move, score) pairs, then sort by score descending
+        List<MoveScore> scoredMoves = new ArrayList<>(moves.size());
+        for (Move move : moves) {
+            int score = scoreMoveForOrdering(board, move, player);
+            scoredMoves.add(new MoveScore(move, score));
+        }
+        // Sort by score in descending order (higher scores first)
+        Collections.sort(scoredMoves, (m1, m2) -> Integer.compare(m2.score, m1.score));
+        // Extract the sorted moves
+        List<Move> sorted = new ArrayList<>(scoredMoves.size());
+        for (MoveScore ms : scoredMoves) {
+            sorted.add(ms.move);
+        }
+        return sorted;
+    }
+
+    /**
+     * Score a move for ordering purposes (not the same as board evaluation).
+     * Used to prioritize strong moves for alpha-beta pruning.
+     */
+    private int scoreMoveForOrdering(Board board, Move move, PlayerColor player) {
+        int toCol = move.getToCol();
+        int toRow = move.getToRow();
+
+        // Highest priority: move that reaches the goal row (winning move)
+        if (isWinningRow(toRow, player)) {
+            return 1_000_000;
+        }
+
+        // High priority: capture (move to square with opponent piece)
+        int destinationBefore = board.getCell(toCol, toRow);
+        if (destinationBefore == player.getOpponentPieceValue()) {
+            return 10_000;
+        }
+
+        // Medium priority: advancement toward goal row
+        int advanceScore = computeAdvancementScore(toRow, player);
+        return 100 + advanceScore * 10;
+    }
+
+    /**
+     * Check if a row is the winning row for the given player.
+     */
+    private boolean isWinningRow(int row, PlayerColor player) {
+        if (player == PlayerColor.RED) {
+            return row == 0;  // RED wants to reach row 0
+        }
+        return row == Board.SIZE - 1;  // BLACK wants to reach row 7
+    }
+
+    /**
+     * Compute advancement score: distance toward the goal row.
+     * Higher value = closer to goal.
+     */
+    private int computeAdvancementScore(int row, PlayerColor player) {
+        if (player == PlayerColor.RED) {
+            return Board.SIZE - 1 - row;  // Distance to row 0
+        }
+        return row;  // Distance to row 7
+    }
+
+    /**
+     * Helper class to pair a move with its ordering score.
+     */
+    private static class MoveScore {
+        final Move move;
+        final int score;
+
+        MoveScore(Move move, int score) {
+            this.move = move;
+            this.score = score;
+        }
+    }
+
     private int search(Board board, int depth, int alpha, int beta, PlayerColor sideToPlay, PlayerColor maximizingSide) {
         if (depth == 0 || board.isTerminalFor(maximizingSide)) {
             return evaluationFunction.evaluate(board, maximizingSide);
@@ -173,6 +261,9 @@ class MinimaxAlphaBeta {
         if (legalMoves.isEmpty()) {
             return evaluationFunction.evaluate(board, maximizingSide);
         }
+
+        // Order moves to improve alpha-beta pruning efficiency
+        legalMoves = orderMovesForSearch(board, legalMoves, sideToPlay);
 
         if (sideToPlay == maximizingSide) {
             int value = Integer.MIN_VALUE;
