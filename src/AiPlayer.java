@@ -1,12 +1,10 @@
 import java.util.List;
 
 class AiPlayer {
-    // Time limit for iterative deepening search (4.5 seconds provides safety margin below 5-second server limit)
     private static final long DEFAULT_TIME_LIMIT_MILLIS = 4_500L;
 
     private final PlayerColor color;
     private final MoveGenerator moveGenerator;
-    // maxDepth passed to MinimaxAlphaBeta is a safety bound; iterative deepening uses time budget as real limit
     private final MinimaxAlphaBeta minimax;
     private final long searchTimeLimitMillis;
 

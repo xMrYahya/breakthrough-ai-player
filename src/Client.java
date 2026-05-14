@@ -14,8 +14,6 @@ class Client {
 	Move lastAttemptedMove = null;
 	int[][] boardBeforeLastAttempt = null;
 	final int serverPort = 8888;
-	// AI search configuration: maxDepth is a safety upper bound; time budget is the practical limit.
-	// Iterative deepening will search depths 1, 2, 3, ... until the time budget (4.5 sec) is exceeded.
 	final int aiSearchDepth = 20;
 	final long aiTimeBudgetMillis = 4500L;
 	String serverAddress = args.length > 0 ? args[0] : "localhost";
@@ -31,14 +29,12 @@ class Client {
 		   	
             cmd = (char)input.read();
             System.out.println(cmd);
-            // Debut de la partie en joueur blanc
             if(cmd == '1'){
                 myColor = PlayerColor.fromServerStartCommand(cmd);
 				aiPlayer = new AiPlayer(myColor, aiSearchDepth, aiTimeBudgetMillis);
                 byte[] aBuffer = new byte[1024];
 				
 		    int size = input.available();
-		    //System.out.println("size " + size);
 		    input.read(aBuffer,0,size);
             String s = new String(aBuffer).trim();
             System.out.println(s);
@@ -68,7 +64,6 @@ class Client {
 				output.write(moveText.getBytes(),0,moveText.length());
 				output.flush();
             }
-            // Debut de la partie en joueur Noir
             if(cmd == '2'){
 				myColor = PlayerColor.fromServerStartCommand(cmd);
 				aiPlayer = new AiPlayer(myColor, aiSearchDepth, aiTimeBudgetMillis);
@@ -76,7 +71,6 @@ class Client {
                 byte[] aBuffer = new byte[1024];
 				
 				int size = input.available();
-				//System.out.println("size " + size);
 				input.read(aBuffer,0,size);
                 String s = new String(aBuffer).trim();
                 System.out.println(s);
@@ -94,8 +88,6 @@ class Client {
             }
 
 
-			// Le serveur demande le prochain coup
-			// Le message contient aussi le dernier coup joue.
 	    if(cmd == '3'){
 		byte[] aBuffer = new byte[16];
 				
@@ -128,7 +120,6 @@ class Client {
 		output.flush();
 				
 	     }
-			// Le dernier coup est invalide
 			if(cmd == '4'){
 				System.out.println("Coup invalide, entrez un nouveau coup : ");
 				if (boardBeforeLastAttempt != null) {
@@ -148,7 +139,6 @@ class Client {
 				output.flush();
 				
 			}
-            // La partie est terminée
 	    if(cmd == '5'){
                 byte[] aBuffer = new byte[16];
                 int size = input.available();
