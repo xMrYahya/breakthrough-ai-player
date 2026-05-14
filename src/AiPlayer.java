@@ -1,14 +1,24 @@
 import java.util.List;
 
 class AiPlayer {
+    // Time limit for iterative deepening search (4.5 seconds provides safety margin below 5-second server limit)
+    private static final long DEFAULT_TIME_LIMIT_MILLIS = 4_500L;
+
     private final PlayerColor color;
     private final MoveGenerator moveGenerator;
+    // maxDepth passed to MinimaxAlphaBeta is a safety bound; iterative deepening uses time budget as real limit
     private final MinimaxAlphaBeta minimax;
+    private final long searchTimeLimitMillis;
 
     AiPlayer(PlayerColor color, int searchDepth) {
+        this(color, searchDepth, DEFAULT_TIME_LIMIT_MILLIS);
+    }
+
+    AiPlayer(PlayerColor color, int searchDepth, long searchTimeLimitMillis) {
         this.color = color;
         this.moveGenerator = new MoveGenerator();
         this.minimax = new MinimaxAlphaBeta(searchDepth, moveGenerator, new EvaluationFunction());
+        this.searchTimeLimitMillis = searchTimeLimitMillis;
     }
 
     Move chooseMove(int[][] rawBoard) {
@@ -17,7 +27,7 @@ class AiPlayer {
 
     Move chooseMove(int[][] rawBoard, Move excludedMove) {
         Board board = new Board(rawBoard);
-        Move best = minimax.findBestMove(board, color, excludedMove);
+        Move best = minimax.findBestMoveIterativeDeepening(board, color, searchTimeLimitMillis, excludedMove);
         if (best != null) {
             return best;
         }

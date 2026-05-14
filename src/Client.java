@@ -14,6 +14,10 @@ class Client {
 	Move lastAttemptedMove = null;
 	int[][] boardBeforeLastAttempt = null;
 	final int serverPort = 8888;
+	// AI search configuration: maxDepth is a safety upper bound; time budget is the practical limit.
+	// Iterative deepening will search depths 1, 2, 3, ... until the time budget (4.5 sec) is exceeded.
+	final int aiSearchDepth = 20;
+	final long aiTimeBudgetMillis = 4500L;
 	String serverAddress = args.length > 0 ? args[0] : "localhost";
 	
 	try {
@@ -30,7 +34,7 @@ class Client {
             // Debut de la partie en joueur blanc
             if(cmd == '1'){
                 myColor = PlayerColor.fromServerStartCommand(cmd);
-                aiPlayer = new AiPlayer(myColor, 4);
+				aiPlayer = new AiPlayer(myColor, aiSearchDepth, aiTimeBudgetMillis);
                 byte[] aBuffer = new byte[1024];
 				
 		    int size = input.available();
@@ -67,7 +71,7 @@ class Client {
             // Debut de la partie en joueur Noir
             if(cmd == '2'){
 				myColor = PlayerColor.fromServerStartCommand(cmd);
-				aiPlayer = new AiPlayer(myColor, 4);
+				aiPlayer = new AiPlayer(myColor, aiSearchDepth, aiTimeBudgetMillis);
                 System.out.println("Nouvelle partie! Vous jouer noir, attendez le coup des blancs");
                 byte[] aBuffer = new byte[1024];
 				
